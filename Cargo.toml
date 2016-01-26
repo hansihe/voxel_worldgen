@@ -1,0 +1,13 @@
+[package]
+name = "voxel_worldgen"
+version = "0.1.0"
+authors = ["HansiHE <hansihe@hansihe.com>"]
+
+[dependencies]
+noise = "*"
+image = "*"
+time = "*"
+
+[[bin]]
+name = "worldgen"
+path = "src/bin.rs"
