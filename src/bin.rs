@@ -9,17 +9,13 @@ use layer::{ LayerLCG };
 
 use image::{ ImageBuffer };
 
-use layer::{ GenLayer, GenReduceOcean, GenIsland, GenZoom, ZoomType, };
+use layer::GenL;
+use layer::{ GenLayer, GenReduceOcean, GenIsland, GenZoom, ZoomType, GenSimpleFn };
+use layer::{ GenSimplex, SimplexNoiseType };
+use layer::{ GenSimpleFnMixer };
 
-fn vanilla() -> Box<GenLayer<bool>> {
-    let mut src: Box<GenLayer<bool>> = GenIsland::new(1, 4);
-    src = GenZoom::<bool>::new(2000, ZoomType::FUZZY, src);
-    src = GenZoom::<bool>::new(2001, ZoomType::MAJORITY, src);
-    src = GenReduceOcean::new(2, 2, src);
-    src = GenZoom::<bool>::new(2002, ZoomType::MAJORITY, src);
-    src = GenZoom::<bool>::new(2003, ZoomType::MAJORITY, src);
-    src
-}
+mod generators;
+
 
 
 mod analysis;
@@ -46,21 +42,25 @@ fn main() {
     let mut dst = GenZoom::new(5, ZoomType::MAJORITY, src);*/
 
     //divide(1000, 20_000_000);
+    
+    //let seed1 = Seed::new(1);
 
     println!("start");
     let start = time::precise_time_ns();
-    let mut dst = vanilla();
-    let buf = dst.gen(0, 0, 1024, 1024);
+    let mut dst = test();
+    let buf = dst.gen(10, 0, 0, 1024, 1024);
     let end = time::precise_time_ns();
     println!("end {:?} {:?}", buf[3432], end - start);
 
-    let seed = Seed::new(1);
     let img = ImageBuffer::from_fn(1024, 1024, |x, y| {
-        if buf[(x + y * 1024) as usize] {
+        /*if buf[(x + y * 1024) as usize] {
             image::Luma([255])
         } else {
             image::Luma([0])
-        }
+        }*/
+        let (num, tum) = buf[(x + y * 1024) as usize];
+        //image::Rgb([(num / 8) * 16, (num % 8) * 16, 0])
+        image::Rgb([num*16, tum*16, 0])
         /*let val = if x < 512 {
             normalize_simplex(open_simplex2(&seed, &[x as f32 / 32.0, y as f32 / 32.0]))
         } else {

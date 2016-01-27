@@ -1,4 +1,5 @@
 use super::{ GenLayer, LayerLCG };
+use std::rc::Rc;
 
 fn frequent_or_random<T>(rand: &mut LayerLCG, i1: T, i2: T, i3: T, i4: T) -> T where T: PartialEq {
     if i2 == i3 && i3 == i4 { i2 }
@@ -14,40 +15,39 @@ fn frequent_or_random<T>(rand: &mut LayerLCG, i1: T, i2: T, i3: T, i4: T) -> T w
     else { rand.random_from_4(i1, i2, i3, i4) }
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone)]
 pub enum ZoomType {
     MAJORITY,
     FUZZY,
 }
 
+#[derive(Clone)]
 pub struct GenZoom<I> {
-    source: Box<GenLayer<I>>,
-    lcg: LayerLCG,
+    source: Rc<GenLayer<I>>,
+    seed: i64,
     zoom_type: ZoomType,
 }
-impl<O> GenZoom<O> {
-    pub fn new<O1>(seed: i64, zoom_type: ZoomType, source: Box<GenLayer<O1>>
-               ) -> Box<GenZoom<O1>> {
-        Box::new(GenZoom {
+impl<I> GenZoom<I> {
+    pub fn new(seed: i64, zoom_type: ZoomType, source: Rc<GenLayer<I>>
+               ) -> Rc<GenZoom<I>> {
+        Rc::new(GenZoom {
             source: source,
-            lcg: LayerLCG::new(seed),
+            seed: seed,
             zoom_type: zoom_type,
         })
     }
 }
-impl<O> GenLayer<O> for GenZoom<O> where O: PartialEq + Copy {
-    fn seed_world(&mut self, seed: i64) {
-        self.lcg.seed_world(seed);
-        self.source.seed_world(seed);
-    }
-    fn gen(&mut self, sink_x: i32, sink_y: i32, sink_w: i32, sink_h: i32) -> Vec<O> {
+impl<I> GenLayer<I> for GenZoom<I> where I: PartialEq + Copy {
+    fn gen(&self, seed: i64, sink_x: i32, sink_y: i32, sink_w: i32, sink_h: i32) -> Vec<I> {
+        let mut lcg = LayerLCG::new(self.seed, seed);
+
         let source_x = sink_x >> 1;
         let source_y = sink_y >> 1;
         // +1 for sampling 2x2 area everywhere
         // +1 for the bit we lose wen shifting
         let source_w = (sink_w >> 1) + 2; // 514
         let source_h = (sink_h >> 1) + 2;
-        let source_buf = self.source.gen(source_x, source_y, source_w, source_h);
+        let source_buf = self.source.gen(seed, source_x, source_y, source_w, source_h);
         
         // We produce data for both cases of the lost byte,
         // reassemble correctly later on. Produce extra data.
@@ -69,7 +69,7 @@ impl<O> GenLayer<O> for GenZoom<O> where O: PartialEq + Copy {
 
             for sink_sample_x in 0..source_w-1 {
 
-                self.lcg.seed_pos((sink_sample_x + (source_x << 1)) as i64, 
+                lcg.seed_pos((sink_sample_x + (source_x << 1)) as i64, 
                                   ((sink_sample_y + source_y) << 1) as i64);
 
                 let sample10 = source_buf[
@@ -83,18 +83,18 @@ impl<O> GenLayer<O> for GenZoom<O> where O: PartialEq + Copy {
                 
                 sink_unaligned_buf[base_idx as usize] = sample00;
                 sink_unaligned_buf[(base_idx + 1) as usize] = 
-                    self.lcg.random_from_2(sample00, sample10);
+                    lcg.random_from_2(sample00, sample10);
                 sink_unaligned_buf[(base_idx + sink_unaligned_w) as usize] = 
-                    self.lcg.random_from_2(sample00, sample01);
+                    lcg.random_from_2(sample00, sample01);
                 if self.zoom_type == ZoomType::MAJORITY {
                     sink_unaligned_buf[(base_idx + sink_unaligned_w + 1) as usize] = 
-                        frequent_or_random(&mut self.lcg, 
+                        frequent_or_random(&mut lcg, 
                                            sample00, sample10, 
                                            sample01, sample11);
                 } else if self.zoom_type == ZoomType::FUZZY {
                     sink_unaligned_buf[(base_idx + sink_unaligned_w + 1) as usize] = 
-                        self.lcg.random_from_4(sample00, sample10, 
-                                               sample01, sample11);
+                        lcg.random_from_4(sample00, sample10, 
+                                          sample01, sample11);
                 }
 
                 sample00 = sample10;

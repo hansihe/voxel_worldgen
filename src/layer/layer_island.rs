@@ -1,30 +1,29 @@
+use std::rc::Rc;
 use super::{ GenLayer, LayerLCG };
 
+#[derive(Clone)]
 pub struct GenIsland {
-    lcg: LayerLCG,
+    seed: i64,
     island_chance: i32,
 }
 impl GenIsland {
-    pub fn new(seed: i64, island_chance: i32) -> Box<GenIsland> {
-        Box::new(GenIsland {
-            lcg: LayerLCG::new(seed),
+    pub fn new(seed: i64, island_chance: i32) -> Rc<GenIsland> {
+        Rc::new(GenIsland {
+            seed: seed,
             island_chance: island_chance,
         })
     }
 }
 impl GenLayer<bool> for GenIsland {
-    fn seed_world(&mut self, seed: i64) {
-        self.lcg.seed_world(seed);
-    }
-    fn gen(&mut self, area_x: i32, area_y: i32, area_width: i32, area_height: i32
+    fn gen(&self, seed: i64, area_x: i32, area_y: i32, area_width: i32, area_height: i32
            ) -> Vec<bool> {
-
+        let mut lcg = LayerLCG::new(self.seed, seed);
         let mut buf = Vec::with_capacity((area_width * area_height) as usize);
 
         for y in 0..area_height {
             for x in 0..area_width {
-                self.lcg.seed_pos((area_x + x) as i64, (area_y + y) as i64);
-                let has_island = self.lcg.next_int(self.island_chance) == 0;
+                lcg.seed_pos((area_x + x) as i64, (area_y + y) as i64);
+                let has_island = lcg.next_int(self.island_chance) == 0;
                 buf.push(has_island)
             }
         }

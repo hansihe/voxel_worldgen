@@ -5,18 +5,21 @@ fn twist(seed: i64) -> i64 {
     seed.wrapping_mul(seed.wrapping_mul(LCG_MULT).wrapping_add(LCG_ADD))
 }
 
+#[derive(Clone)]
 pub struct LayerLCG {
     base_seed: i64,
     world_seed: i64,
     pos_seed: i64,
 }
 impl LayerLCG {
-    pub fn new(base_seed: i64) -> LayerLCG {
-        LayerLCG {
+    pub fn new(base_seed: i64, world_seed: i64) -> LayerLCG {
+        let mut lcg = LayerLCG {
             base_seed: base_seed,
-            world_seed: 0,
+            world_seed: base_seed,
             pos_seed: 0,
-        }
+        };
+        lcg.seed_world(world_seed);
+        lcg
     }
     /// Seed the LCG from the base seed and the world seed
     pub fn seed_world(&mut self, world_seed: i64) {
