@@ -7,6 +7,8 @@ authors = ["HansiHE <hansihe@hansihe.com>"]
 noise = "*"
 image = "*"
 time = "*"
+rand = "*"
+num = "*"
 
 [[bin]]
 name = "worldgen"

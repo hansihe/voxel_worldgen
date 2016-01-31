@@ -1,3 +1,18 @@
+extern crate image;
+extern crate noise;
+extern crate rand;
+extern crate time;
+extern crate num;
+
+pub mod simplex_normalized;
+pub mod layer;
+pub mod generators;
+pub mod rnd;
+pub mod analysis;
+
+pub use generators::vanilla::{ WorldGeneratorState, lerp_height_field, test_generate_chunk };
+pub use rand::{XorShiftRng, StdRng};
+
 #[cfg(test)]
 mod test {
     #[test]
