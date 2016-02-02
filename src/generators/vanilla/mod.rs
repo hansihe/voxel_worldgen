@@ -46,7 +46,8 @@ pub fn generate_chunk(state: &WorldGeneratorState, chunk_pos: &[i32; 2]) -> Vec<
     let size: [u32; 2] = [5, 5];
     let density_field = gen_height_field(
         state, &biomes[..], &[chunk_pos[0]*4, chunk_pos[1]*4], &size);
-    let mut block_array = lerp_height_field(&density_field, &biomes, chunk_pos);
+    let mut block_array = lerp_height_field(&density_field, &biomes, chunk_pos,
+                                            &[5, 33, 5], &[4, 8, 4]);
     
     biome_block_mutate::mutate_chunk(state, &mut block_array, chunk_pos);
 

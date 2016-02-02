@@ -117,11 +117,11 @@ pub fn gen_height_field(state: &WorldGeneratorState, biomes: &[u8], pos: &[i32; 
     };
 
     // Output buffer
-    let mut height_field = vec![0f64; 5*5*33];
+    let mut height_field = vec![0f64; (size[0]*size[1]*33) as usize];
 
     // Sample the noise data
     let fillin_noise_pos = [pos[0] as f64, 0.0, pos[1] as f64];
-    let fillin_noise_size = [5, 33, 5];
+    let fillin_noise_size = [size[0], 33, size[1]];
     let fillin_noise_thresh_scale = [COORDINATE_SCALE, HEIGHT_SCALE, COORDINATE_SCALE];
     let fillin_noise_value_scale = [
         COORDINATE_SCALE / MAIN_NOISE_SCALE_X,
@@ -144,7 +144,7 @@ pub fn gen_height_field(state: &WorldGeneratorState, biomes: &[u8], pos: &[i32; 
     // The depth noise is what causes the rough height terrain features. 
     // This is later combined with the fillin values.
     let depth_noise = gen_noise_octaves(
-        &state.depth_noise, &fillin_noise_pos, &[5, 1, 5],
+        &state.depth_noise, &fillin_noise_pos, &[size[0], 1, size[1]],
         &[DEPTH_NOISE_SCALE_X, 1.0, DEPTH_NOISE_SCALE_Z], 1.0);
 
     // We increment this at the end of every loop iteration to track
