@@ -2,9 +2,7 @@ use ::layer::GenL;
 use ::layer::{ GenIsland, GenZoom, ZoomType, GenReduceOcean };
 use ::layer::{ GenSimplex, SimplexNoiseType };
 use ::layer::{ GenSimpleFnTransformer, GenSimpleFnMixer };
-use ::rnd::OctavesSeed;
 
-use ::rand::Rng;
 use ::num::Float;
 
 fn land_mask() -> GenL<bool> {
@@ -32,7 +30,7 @@ pub fn biome_map() -> GenL<u8> {
 
     fn make_biome_val(x: i32, y: i32, data: (u8, u8)) -> u8 {
         let (temp, wet) = data;
-        if wet > 3 {
+        if temp > 3 {
             0
         } else {
             1

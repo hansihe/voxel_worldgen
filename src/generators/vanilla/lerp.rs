@@ -1,6 +1,4 @@
-use super::WorldGeneratorState;
 use super::util::{ chunk_data_idx, height_field_idx };
-use super::{ gen_height_field };
 use super::constants::*;
 
 /// Takes an array of density values in a chunk, usually by the gen_height_field
@@ -86,7 +84,7 @@ pub fn lerp_height_field(density_field: &[f64], biomes: &[u8], pos: &[i32; 2]) -
                             // we set the block to stone. If we are below water
                             // level and the block is air, set it to water.
                             if lerp_f > 0.0 {
-                                out[idx] = 2;
+                                out[idx] = 1;
                                 // Stone
                             } else if y < SEA_LEVEL {
                                 out[idx] = 9;

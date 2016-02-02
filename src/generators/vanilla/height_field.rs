@@ -4,26 +4,19 @@ use super::util::{ denormalize_clamp };
 
 use super::constants::*;
 
-fn pos2_to_float(pos: &[u32; 2]) -> [f64; 2] {
-    [pos[0] as f64, pos[1] as f64]
-}
-fn pos3_to_float(pos: &[u32; 3]) -> [f64; 3] {
-    [pos[0] as f64, pos[1] as f64, pos[2] as f64]
-}
-
 /// This is the function that takes a biome index and gives back the
 /// minimum height constant in the biome. TODO
 fn biome_height_min(id: u8) -> f64 { 
     match id {
-        0 => 0.1,
-        1 => -0.2,
+        0 => 0.4,
+        1 => -0.3,
         _ => panic!(),
     }
 }
 /// This does the same as biome_height_min, except for height variation.
 fn biome_height_variation(id: u8) -> f64 { 
     match id {
-        0 => 0.2,
+        0 => 0.8,
         1 => 0.1,
         _ => panic!(),
     }
@@ -51,12 +44,12 @@ fn scale_height_noise(input: f64) -> f64 {
 /// The position starts 2 from the edge on both the x and y axis.
 /// Samples the height and variation of the biome in the given position.
 /// Returns a tuple of height start and variation.
-fn sample_biome_range(biomes: &[u8], size: &[u32; 2], pos: &[u32; 2]) -> (f64, f64) {
+pub fn sample_biome_range(biomes: &[u8], size: &[u32; 2], pos: &[u32; 2]) -> (f64, f64) {
     let parabolic_field = parabolic_field();
     // Get the biome we are currently in. Note that we go out 2 from the edge,
     // as we need the extra data on the edge for averaging the height map
     // earlier.
-    let current_biome_idx = (pos[0] + 2) + (pos[1] + 2) * size[0];
+    let current_biome_idx = (pos[0] + 2) + (pos[1] + 2) * (size[0] + 4);
     let current_biome_id = biomes[current_biome_idx as usize];
 
     let mut biome_height_start_sum = 0f64;
@@ -71,7 +64,7 @@ fn sample_biome_range(biomes: &[u8], size: &[u32; 2], pos: &[u32; 2]) -> (f64, f
         for biome_sample_x in -2i32..3 {
             // Get the id of the biome we are currently sampling.
             let current_biome_sample_idx = ((pos[0] as i32 + biome_sample_x + 2) as u32)
-                + ((pos[1] as i32 + biome_sample_z + 2) as u32 * size[0]);
+                + ((pos[1] as i32 + biome_sample_z + 2) as u32 * (size[0] + 4));
             let current_biome_sample_id = 
                 biomes[current_biome_sample_idx as usize];
 
@@ -163,7 +156,7 @@ pub fn gen_height_field(state: &WorldGeneratorState, biomes: &[u8], pos: &[i32; 
         for biome_x in 0..size[0] {
             // Sample and apply constants to the biome height and variance.
             let (biome_height_start_base, biome_height_variation_base) =
-                sample_biome_range(biomes, size, &[biome_x, biome_z]);
+                sample_biome_range(biomes, size, &[biome_z, biome_x]);
 
             // Apply constants to the height start and variation
             let biome_height_start = (biome_height_start_base * 4.0 - 1.0) / 8.0;
@@ -216,6 +209,11 @@ pub fn gen_height_field(state: &WorldGeneratorState, biomes: &[u8], pos: &[i32; 
                 height_field[height_field_idx(
                     biome_z as u32, out_buf_height, biome_x as u32)] = 
                     clamped_fillin_value;
+
+                //height_field[height_field_idx(
+                //    biome_z as u32, out_buf_height, biome_x as u32)] = 
+                //    ((biome_height_variation_base * 5.0) as f64)
+                //    - ((out_buf_height as f64) - 20.0);
 
                 noise_buf_3d_idx += 1;
             }

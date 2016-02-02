@@ -26,7 +26,7 @@ impl GenSimplex {
 }
 impl GenLayer<f32> for GenSimplex {
     fn gen(&self, seed: i64, area_x: i32, area_y: i32, area_width: i32, area_height: i32) -> Vec<f32> {
-        let mut lcg = LayerLCG::new(self.seed, seed);
+        let lcg = LayerLCG::new(self.seed, seed);
         let mut buf = Vec::with_capacity((area_width * area_height) as usize);
         
         let seed = Seed::new(lcg.world_seed() as u32);

@@ -17,7 +17,7 @@ impl <O> GenLayer<O> for GenSimpleFn<O> {
         let fun = self.fun;
         for sample_y in 0..area_y {
             for sample_x in 0..area_x {
-                sink_buf.push(fun(sample_x, sample_y));
+                sink_buf.push(fun(x+sample_x, y+sample_y));
             }
         }
         sink_buf
@@ -39,7 +39,7 @@ impl <I, O> GenSimpleFnTransformer<I, O> {
 // Could be made faster by specializing. Will not do until it poses a problem.
 impl <I: Copy, O> GenLayer<O> for GenSimpleFnTransformer<I, O> {
     fn gen(&self, seed: i64, x: i32, y: i32, area_x: i32, area_y: i32) -> Vec<O> {
-        let mut buf = self.source.gen(seed, x, y, area_x, area_y);
+        let buf = self.source.gen(seed, x, y, area_x, area_y);
         let mut out_buf = Vec::with_capacity(buf.len());
         let fun = self.fun;
         for sample_y in 0..area_y {
@@ -71,8 +71,8 @@ impl <I1, I2, O> GenSimpleFnMixer<I1, I2, O> {
 }
 impl <I1: Copy, I2: Copy, O> GenLayer<O> for GenSimpleFnMixer<I1, I2, O> {
     fn gen(&self, seed: i64, x: i32, y: i32, area_x: i32, area_y: i32) -> Vec<O> {
-        let mut src1_buf = self.source1.gen(seed, x, y, area_x, area_y);
-        let mut src2_buf = self.source2.gen(seed, x, y, area_x, area_y);
+        let src1_buf = self.source1.gen(seed, x, y, area_x, area_y);
+        let src2_buf = self.source2.gen(seed, x, y, area_x, area_y);
         let mut out_buf = Vec::with_capacity(src1_buf.len());
         let fun = self.fun;
         for sample_y in 0..area_y {

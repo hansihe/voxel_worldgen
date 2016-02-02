@@ -3,45 +3,53 @@
 /// making notes while examining the obfuscated code, and later reimplementing
 /// it in Rust. No code was directly copied or translated.
 /// 
-/// Only the algorithm was copied, no code.
+/// Only parts of the algorithm was copied/inspired, no code.
 
 use ::rnd::OctavesSeed;
-use ::rand::Rng;
+use ::rand::{ Rng, Rand };
 
 pub mod lerp;
 pub mod height_field;
 pub mod constants;
 pub mod util;
 pub mod biomes;
+pub mod biome_block_mutate;
 
 pub use self::lerp::lerp_height_field;
 pub use self::height_field::gen_height_field;
 
 pub struct WorldGeneratorState {
+    world_seed: u32,
     depth_noise: OctavesSeed,
     fillin_noise: OctavesSeed,
     fillin_max_noise: OctavesSeed,
     fillin_min_noise: OctavesSeed,
+    topsoil_depth_noise: OctavesSeed,
 }
 impl WorldGeneratorState {
     pub fn new<R: Rng>(rand: &mut R) -> WorldGeneratorState {
         WorldGeneratorState {
+            world_seed: rand.gen(),
             depth_noise: OctavesSeed::new(rand, 16),
             fillin_noise: OctavesSeed::new(rand, 8),
             fillin_max_noise: OctavesSeed::new(rand, 16),
             fillin_min_noise: OctavesSeed::new(rand, 16),
+            topsoil_depth_noise: OctavesSeed::new(rand, 2),
         }
     }
 }
 
 pub fn generate_chunk(state: &WorldGeneratorState, chunk_pos: &[i32; 2]) -> Vec<u8> {
     let biomes_gen = biomes::biome_map();
-    let biomes = biomes_gen.gen(10, chunk_pos[0]*5, chunk_pos[1]*5, 9, 9);
+    let biomes = biomes_gen.gen(10, chunk_pos[0]*4, chunk_pos[1]*4, 9, 9);
 
     let size: [u32; 2] = [5, 5];
     let density_field = gen_height_field(
         state, &biomes[..], &[chunk_pos[0]*4, chunk_pos[1]*4], &size);
-    let block_array = lerp_height_field(&density_field, &biomes, chunk_pos);
+    let mut block_array = lerp_height_field(&density_field, &biomes, chunk_pos);
+    
+    biome_block_mutate::mutate_chunk(state, &mut block_array, chunk_pos);
+
     block_array
 }
 
