@@ -11,8 +11,9 @@ const CAVE_GEN_RAND_SALT: u64 = 87462348731267;
 const RANGE_CHUNKS: u32 = 8;
 
 const BLOCK_AIR: u8 = 0;
-const BLOCK_DIRT: u8 = 1;
+const BLOCK_STONE: u8 = 1;
 const BLOCK_GRASS: u8 = 2;
+const BLOCK_DIRT: u8 = 3;
 const BLOCK_FLOWING_WATER: u8 = 8;
 const BLOCK_WATER: u8 = 9;
 const BLOCK_FLOWING_LAVA: u8 = 10;
@@ -214,18 +215,19 @@ fn carve_cave_step(chunk_data: &mut [u8],
             let z_norm_pos_dist = ((curr_z + chunk_pos[1] as i64 * 16) as f64
                                    + 0.5 - pos[2]) / horizontal_scale_factor as f64;
 
-            let mut hit_grass = false;
-
             if x_norm_pos_dist.powi(2) + z_norm_pos_dist.powi(2) < 1.0 {
+                let mut hit_grass = false;
 
-                for curr_y in carve_box_start[1]..carve_box_end[1] {
+                for curr_y in (carve_box_start[1]..carve_box_end[1]).rev() {
                     let y_norm_pos_dist =((curr_y - 1) as f64 
                                           + 0.5 - pos[1]) / vertical_scale_factor as f64;
 
                     if y_norm_pos_dist > -0.7 && x_norm_pos_dist.powi(2) + z_norm_pos_dist.powi(2) + y_norm_pos_dist.powi(2) < 1.0 {
                         let curr_idx = get_chunk_idx(curr_x, curr_y, curr_z);
+                        let over_idx = get_chunk_idx(curr_x, curr_y+1, curr_z);
+                        let under_idx = get_chunk_idx(curr_x, curr_y-1, curr_z);
                         let block_curr = chunk_data[curr_idx];
-                        let block_over = chunk_data[curr_idx+1];
+                        let block_over = chunk_data[over_idx];
 
                         // TODO: Mycelium
                         if block_curr == BLOCK_GRASS {
@@ -240,9 +242,9 @@ fn carve_cave_step(chunk_data: &mut [u8],
                                 // TODO: If above is sand, set sandstone (remember variation)
                                 // TODO: check that curr_idx-1 doesn't underflow into
                                 // next column
-                                if hit_grass && chunk_data[curr_idx-1] == BLOCK_DIRT {
+                                if hit_grass && chunk_data[under_idx] == BLOCK_DIRT {
                                     // TODO: Set correct variant (mycelium)
-                                    chunk_data[curr_idx-1] = BLOCK_GRASS;
+                                    chunk_data[under_idx] = BLOCK_GRASS;
                                 }
                             }
                         }
