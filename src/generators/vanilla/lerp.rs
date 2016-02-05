@@ -12,25 +12,29 @@ pub fn lerp_height_field(density_field: &[f64], biomes: &[u8], pos: &[i32; 2],
                     *scale[0]*scale[1]*scale[2]) as usize;
     let mut out = vec![0; out_size]; // 65536
 
+    // Block to make the set_out function release its reference
+    // to out, so that we can return the out buffer from the function.
     {
+        // Accesses a single entry from the input buffer.
         let density_field_val = |x: u32, y: u32, z: u32| {
             density_field[(x + (z*size[0]) + (y*size[0]*size[2])) as usize]
         };
+        // Sets a single entry in the output buffer.
         let mut set_out = |pos: &[u32; 3], val: u8| {
-            let out_idx = (pos[0] 
-                           + (pos[2]*(size[0]-1)*scale[0]) 
-                           + (pos[1]*(size[0]-1)*scale[0]*(size[2]-1)*scale[2])) as usize;
+            let out_idx = (pos[0] + 
+                           (pos[2]*(size[0]-1)*scale[0]) + 
+                           (pos[1]*(size[0]-1)*scale[0]*(size[2]-1)*scale[2])) as usize;
             out[out_idx] = val;
         };
 
-        for density_field_x in 0..(size[0]-1) { // 4
-            for density_field_z in 0..(size[2]-1) { // 4
-                for density_field_y in 0..(size[1]-1) { // 32
+        for density_field_x in 0..(size[0]-1) {
+            for density_field_z in 0..(size[2]-1) {
+                for density_field_y in 0..(size[1]-1) {
 
                     // The input density values are only provided for every
                     // 8th block in the height of the chunk.
                     // We need to divide each of the deltas by 8.
-                    let RANGE_INV_Y: f64 = 1.0/(scale[1] as f64); // 8
+                    let RANGE_INV_Y: f64 = 1.0/(scale[1] as f64);
 
                     // As this is 3 dimensional linear interpolation,
                     // we only really care about 8 points at any given time.
@@ -65,7 +69,7 @@ pub fn lerp_height_field(density_field: &[f64], biomes: &[u8], pos: &[i32; 2],
                             density_field_x+1, density_field_y+1, density_field_z+1)
                         - vertex_4) * RANGE_INV_Y;
 
-                    for lerp_y in 0..scale[1] { // 8
+                    for lerp_y in 0..scale[1] {
                         // The interpolation here is the exact same thing as the
                         // one in the outer loop, except that the sample distance
                         // in the height field is only 4 blocks on both the x and z
@@ -73,7 +77,7 @@ pub fn lerp_height_field(density_field: &[f64], biomes: &[u8], pos: &[i32; 2],
                         // Note that the interpolation in each inner loop is in one
                         // less dimension than in the loop outside of it. This is 
                         // done 3 times to get 3 dinensional interpolation.
-                        let RANGE_INV_Z: f64 = 1.0/(scale[2] as f64); // 4
+                        let RANGE_INV_Z: f64 = 1.0/(scale[2] as f64);
 
                         let mut lerp_s1 = vertex_1;
                         let mut lerp_s2 = vertex_2;
@@ -81,7 +85,7 @@ pub fn lerp_height_field(density_field: &[f64], biomes: &[u8], pos: &[i32; 2],
                         let lerp_ds1 = (vertex_3 - vertex_1) * RANGE_INV_Z;
                         let lerp_ds2 = (vertex_4 - vertex_2) * RANGE_INV_Z;
 
-                        for lerp_z in 0..scale[2] { // 4
+                        for lerp_z in 0..scale[2] {
                             // See outer loop
                             let RANGE_INV_X: f64 = 1.0/(scale[0] as f64);
 
@@ -92,18 +96,15 @@ pub fn lerp_height_field(density_field: &[f64], biomes: &[u8], pos: &[i32; 2],
                                 let x = density_field_x * scale[0] + lerp_z;
                                 let y = density_field_y * scale[1] + lerp_y;
                                 let z = density_field_z * scale[2] + lerp_x;
-                                //let idx = chunk_data_idx(x, y, z);
                                 let chunk_pos = [x, y, z];
 
                                 // If the value of the current block is above 0,
                                 // we set the block to stone. If we are below water
                                 // level and the block is air, set it to water.
                                 if lerp_f > 0.0 {
-                                    //out[idx] = 1;
                                     set_out(&chunk_pos, 1);
                                     // Stone
                                 } else if y < SEA_LEVEL {
-                                    //out[idx] = 9;
                                     set_out(&chunk_pos, 9);
                                     // Water
                                 }

@@ -3,6 +3,7 @@ extern crate noise;
 extern crate rand;
 extern crate time;
 extern crate num;
+extern crate nalgebra;
 
 use image::{ ImageBuffer };
 use noise::{Seed, open_simplex2};
@@ -25,6 +26,8 @@ use rand::{ XorShiftRng, random, StdRng };
 
 mod analysis;
 use analysis::simplex_binning::{divide};
+
+//mod geometry;
 
 fn main() {
     /*let mut lcg = LayerLCG::new(12);

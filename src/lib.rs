@@ -3,6 +3,7 @@ extern crate noise;
 extern crate rand;
 extern crate time;
 extern crate num;
+extern crate nalgebra;
 
 pub mod simplex_normalized;
 pub mod layer;

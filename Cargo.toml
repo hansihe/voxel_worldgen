@@ -9,6 +9,7 @@ image = "*"
 time = "*"
 rand = "*"
 num = "*"
+nalgebra = "*"
 
 [[bin]]
 name = "worldgen"

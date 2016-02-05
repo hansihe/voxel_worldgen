@@ -7,6 +7,7 @@
 
 use ::rnd::OctavesSeed;
 use ::rand::{ Rng, Rand };
+use ::nalgebra::Pnt2;
 
 pub mod lerp;
 pub mod height_field;
@@ -14,6 +15,7 @@ pub mod constants;
 pub mod util;
 pub mod biomes;
 pub mod biome_block_mutate;
+pub mod caves;
 
 pub use self::lerp::lerp_height_field;
 pub use self::height_field::gen_height_field;
@@ -50,6 +52,8 @@ pub fn generate_chunk(state: &WorldGeneratorState, chunk_pos: &[i32; 2]) -> Vec<
                                             &[5, 33, 5], &[4, 8, 4]);
     
     biome_block_mutate::mutate_chunk(state, &mut block_array, chunk_pos);
+    caves::generate(&mut block_array, state.world_seed, 
+                    Pnt2::new(chunk_pos[0], chunk_pos[1]));
 
     block_array
 }
