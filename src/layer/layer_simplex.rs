@@ -2,6 +2,7 @@ use super::{ GenLayer, LayerLCG };
 use ::simplex_normalized::normalize_simplex;
 use ::noise::{ Seed, open_simplex2 };
 use std::rc::Rc;
+use ::nalgebra::{ Vec2, Pnt2 };
 
 #[derive(Clone)]
 pub enum SimplexNoiseType {
@@ -25,15 +26,15 @@ impl GenSimplex {
     }
 }
 impl GenLayer<f32> for GenSimplex {
-    fn gen(&self, seed: i64, area_x: i32, area_y: i32, area_width: i32, area_height: i32) -> Vec<f32> {
+    fn gen(&self, seed: i64, pos: Pnt2<i32>, size: Vec2<u32>) -> Vec<f32> {
         let lcg = LayerLCG::new(self.seed, seed);
-        let mut buf = Vec::with_capacity((area_width * area_height) as usize);
+        let mut buf = Vec::with_capacity((size.x * size.y) as usize);
         
         let seed = Seed::new(lcg.world_seed() as u32);
-        for y in 0..area_height {
-            for x in 0..area_width {
-                let sx = (area_x + x) as f32 / self.scale;
-                let sy = (area_y + y) as f32 / self.scale;
+        for y in 0..size.y {
+            for x in 0..size.x {
+                let sx = (pos.x + x as i32) as f32 / self.scale;
+                let sy = (pos.y + y as i32) as f32 / self.scale;
                 let noise = open_simplex2(&seed, &[sx, sy]);
                 buf.push(match self.noise_type {
                     SimplexNoiseType::Original => noise,

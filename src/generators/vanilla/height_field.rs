@@ -2,6 +2,8 @@ use super::WorldGeneratorState;
 use super::util::{ gen_noise_octaves, parabolic_field, height_field_idx };
 use super::util::{ denormalize_clamp };
 
+use ::nalgebra::{ Vec2, Pnt2 };
+
 use super::constants::*;
 
 /// This is the function that takes a biome index and gives back the
@@ -44,7 +46,7 @@ fn scale_height_noise(input: f64) -> f64 {
 /// The position starts 2 from the edge on both the x and y axis.
 /// Samples the height and variation of the biome in the given position.
 /// Returns a tuple of height start and variation.
-pub fn sample_biome_range(biomes: &[u8], size: &[u32; 2], pos: &[u32; 2]) -> (f64, f64) {
+pub fn sample_biome_range(biomes: &[u8], size: Vec2<u32>, pos: Pnt2<u32>) -> (f64, f64) {
     let parabolic_field = parabolic_field();
     // Get the biome we are currently in. Note that we go out 2 from the edge,
     // as we need the extra data on the edge for averaging the height map
@@ -109,7 +111,7 @@ pub fn sample_biome_range(biomes: &[u8], size: &[u32; 2], pos: &[u32; 2]) -> (f6
 /// (Starts at the edge and end of the chunk, samples are on the edges of blocks,
 /// not in the center as you might expect. The edges are overlapped by 1 between
 /// chunks to make chunks smoothly blend.)
-pub fn gen_height_field(state: &WorldGeneratorState, biomes: &[u8], pos: &[i32; 2], size: &[u32; 2]) -> Vec<f64> {
+pub fn gen_height_field(state: &WorldGeneratorState, biomes: &[u8], pos: Pnt2<i32>, size: Vec2<u32>) -> Vec<f64> {
     if biomes.len() != ((size[0]+4)*(size[1]+4)) as usize { 
         println!("Biomes array not correct length, expected {:?}, got {:?}", 
                  (size[0]+4)*(size[1]+4), biomes.len());
@@ -156,7 +158,7 @@ pub fn gen_height_field(state: &WorldGeneratorState, biomes: &[u8], pos: &[i32; 
         for biome_x in 0..size[0] {
             // Sample and apply constants to the biome height and variance.
             let (biome_height_start_base, biome_height_variation_base) =
-                sample_biome_range(biomes, size, &[biome_z, biome_x]);
+                sample_biome_range(biomes, size, Pnt2::new(biome_z, biome_x));
 
             // Apply constants to the height start and variation
             let biome_height_start = (biome_height_start_base * 4.0 - 1.0) / 8.0;

@@ -1,5 +1,6 @@
 use super::{ GenLayer, LayerLCG };
 use std::rc::Rc;
+use ::nalgebra::{ Vec2, Pnt2 };
 
 fn frequent_or_random<T>(rand: &mut LayerLCG, i1: T, i2: T, i3: T, i4: T) -> T where T: PartialEq {
     if i2 == i3 && i3 == i4 { i2 }
@@ -38,16 +39,18 @@ impl<I> GenZoom<I> {
     }
 }
 impl<I> GenLayer<I> for GenZoom<I> where I: PartialEq + Copy {
-    fn gen(&self, seed: i64, sink_x: i32, sink_y: i32, sink_w: i32, sink_h: i32) -> Vec<I> {
+    fn gen(&self, seed: i64, pos: Pnt2<i32>, size: Vec2<u32>) -> Vec<I> {
         let mut lcg = LayerLCG::new(self.seed, seed);
 
-        let source_x = sink_x >> 1;
-        let source_y = sink_y >> 1;
+        let source_x = pos.x >> 1;
+        let source_y = pos.y >> 1;
         // +1 for sampling 2x2 area everywhere
         // +1 for the bit we lose wen shifting
-        let source_w = (sink_w >> 1) + 2; // 514
-        let source_h = (sink_h >> 1) + 2;
-        let source_buf = self.source.gen(seed, source_x, source_y, source_w, source_h);
+        let source_w = (size.x >> 1) + 2; // 514
+        let source_h = (size.y >> 1) + 2;
+        let source_buf = self.source.gen(seed, 
+                                         Pnt2::new(source_x, source_y), 
+                                         Vec2::new(source_w, source_h));
         
         // We produce data for both cases of the lost byte,
         // reassemble correctly later on. Produce extra data.
@@ -69,8 +72,8 @@ impl<I> GenLayer<I> for GenZoom<I> where I: PartialEq + Copy {
 
             for sink_sample_x in 0..source_w-1 {
 
-                lcg.seed_pos((sink_sample_x + (source_x << 1)) as i64, 
-                                  ((sink_sample_y + source_y) << 1) as i64);
+                lcg.seed_pos((sink_sample_x as i32 + (source_x << 1)) as i64, 
+                                  ((sink_sample_y as i32 + source_y) << 1) as i64);
 
                 let sample10 = source_buf[
                     (sink_sample_x+1 + ((sink_sample_y+0) * source_w)) as usize];
@@ -102,14 +105,14 @@ impl<I> GenLayer<I> for GenZoom<I> where I: PartialEq + Copy {
             }
         }
 
-        let mut final_buf = Vec::with_capacity((sink_w * sink_h) as usize);
+        let mut final_buf = Vec::with_capacity((size.x * size.y) as usize);
         // TODO: Optimize
-        for row in 0..sink_h {
-            let source_start = (row + (sink_y & 1)) * sink_unaligned_w + (sink_x & 1);
+        for row in 0..size.y {
+            let source_start = (row as i32 + (pos.y & 1)) * sink_unaligned_w as i32 + (pos.x & 1);
             //let destStart = row * sink_w;
-            let size = sink_w;
+            let size = size.x;
             for col in  0..size {
-                final_buf.push(sink_unaligned_buf[(source_start + col) as usize])
+                final_buf.push(sink_unaligned_buf[(source_start + col as i32) as usize])
             }
         }
 
