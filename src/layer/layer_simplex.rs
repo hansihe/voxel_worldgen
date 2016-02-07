@@ -3,6 +3,7 @@ use ::simplex_normalized::normalize_simplex;
 use ::noise::{ Seed, open_simplex2 };
 use std::rc::Rc;
 use ::nalgebra::{ Vec2, Pnt2 };
+use ::gen::unit::GenUnit2;
 
 #[derive(Clone)]
 pub enum SimplexNoiseType {
@@ -26,7 +27,7 @@ impl GenSimplex {
     }
 }
 impl GenLayer<f32> for GenSimplex {
-    fn gen(&self, seed: i64, pos: Pnt2<i32>, size: Vec2<u32>) -> Vec<f32> {
+    fn gen(&self, seed: i64, pos: Pnt2<i32>, size: Vec2<u32>) -> GenUnit2<f32> {
         let lcg = LayerLCG::new(self.seed, seed);
         let mut buf = Vec::with_capacity((size.x * size.y) as usize);
         
@@ -43,6 +44,6 @@ impl GenLayer<f32> for GenSimplex {
             }
         }
 
-        buf
+        GenUnit2::new2_from_vec(size, buf)
     }
 }

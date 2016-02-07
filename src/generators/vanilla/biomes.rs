@@ -6,7 +6,7 @@ use ::layer::{ GenSimpleFnTransformer, GenSimpleFnMixer };
 use ::num::Float;
 use ::nalgebra::Pnt2;
 
-fn land_mask() -> GenL<bool> {
+pub fn land_mask() -> GenL<bool> {
     let mut src: GenL<bool> = GenIsland::new(1, 4);
     src = GenZoom::new(2000, ZoomType::FUZZY, src);
     src = GenZoom::new(2001, ZoomType::MAJORITY, src);

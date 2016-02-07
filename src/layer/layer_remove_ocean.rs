@@ -1,6 +1,7 @@
 use super::{ GenLayer, LayerLCG };
 use std::rc::Rc;
 use ::nalgebra::{ Vec2, Pnt2 };
+use ::gen::unit::GenUnit2;
 
 #[derive(Clone)]
 pub struct GenReduceOcean {
@@ -18,7 +19,7 @@ impl GenReduceOcean {
     }
 }
 impl GenLayer<bool> for GenReduceOcean {
-    fn gen(&self, seed: i64, pos: Pnt2<i32>, size: Vec2<u32>) -> Vec<bool> {
+    fn gen(&self, seed: i64, pos: Pnt2<i32>, size: Vec2<u32>) -> GenUnit2<bool> {
         let mut lcg = LayerLCG::new(self.seed, seed);
         let source = self.source.gen(seed, pos-Vec2::new(1, 1), size+Vec2::new(2, 2));
         let mut sink = Vec::with_capacity((size.x * size.y) as usize);
@@ -37,6 +38,6 @@ impl GenLayer<bool> for GenReduceOcean {
             }
         }
 
-        sink
+        GenUnit2::new2_from_vec(size, sink)
     }
 }

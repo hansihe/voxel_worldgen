@@ -24,10 +24,9 @@ mod rnd;
 use rnd::{ OctavesSeed, simplex3_octaves };
 use rand::{ XorShiftRng, random, StdRng };
 
-mod analysis;
-use analysis::simplex_binning::{divide};
-
 mod gen;
+
+use nalgebra::{ Vec2, Pnt2 };
 
 //mod geometry;
 
@@ -65,8 +64,8 @@ fn main() {
     
     //println!("{:?}, length: {:?}", height_field, height_field.len());
     
-    //let gen = generators::vanilla::biomes::biome_map();
-    //let buf = gen.gen(10, -510, -510, 1026, 1026);
+    let gen = generators::vanilla::biomes::land_mask();
+    let buf = gen.gen(10, Pnt2::new(-510, -510), Vec2::new(1026, 1026));
 
     //println!("start");
     //let start = time::precise_time_ns();
@@ -76,11 +75,11 @@ fn main() {
     //println!("end {:?} {:?}", buf[3432], end - start);
 
     let img = ImageBuffer::from_fn(1024, 1024, |x, y| {
-        /*if buf[(x + y * 1024) as usize] {
+        if buf[(x + y * 1026) as usize] {
             image::Luma([255])
         } else {
             image::Luma([0])
-        }*/
+        }
         //let num = buf[(x + y * 1024) as usize];
         //let (height, var) = generators::vanilla::height_field::sample_biome_range(
         //    &buf, &[1024, 1024], &[x, y]);
@@ -97,8 +96,8 @@ fn main() {
         //let i = simplex3_octaves(&octaves, &[x as f64 / 64.0, y as f64 / 64.0, 10.0]);
         //image::Luma([((i + 1.0) * 100.0) as u8])
         //image::Luma([((var + 100.0) * 100.0) as u8])
-        
-        image::Luma([100])
+        //let val = buf[(x + y * 1026) as usize];
+        //image::Luma([val * 100])
     });
 
     img.save("test.png").unwrap();

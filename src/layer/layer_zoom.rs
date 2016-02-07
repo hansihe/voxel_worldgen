@@ -1,6 +1,7 @@
 use super::{ GenLayer, LayerLCG };
 use std::rc::Rc;
 use ::nalgebra::{ Vec2, Pnt2 };
+use ::gen::unit::GenUnit2;
 
 fn frequent_or_random<T>(rand: &mut LayerLCG, i1: T, i2: T, i3: T, i4: T) -> T where T: PartialEq {
     if i2 == i3 && i3 == i4 { i2 }
@@ -39,7 +40,7 @@ impl<I> GenZoom<I> {
     }
 }
 impl<I> GenLayer<I> for GenZoom<I> where I: PartialEq + Copy {
-    fn gen(&self, seed: i64, pos: Pnt2<i32>, size: Vec2<u32>) -> Vec<I> {
+    fn gen(&self, seed: i64, pos: Pnt2<i32>, size: Vec2<u32>) -> GenUnit2<I> {
         let mut lcg = LayerLCG::new(self.seed, seed);
 
         let source_x = pos.x >> 1;
@@ -116,6 +117,6 @@ impl<I> GenLayer<I> for GenZoom<I> where I: PartialEq + Copy {
             }
         }
 
-        final_buf
+        GenUnit2::new2_from_vec(size, final_buf)
     }
 }

@@ -2,7 +2,8 @@ use super::WorldGeneratorState;
 use super::util::{ gen_noise_octaves, parabolic_field, height_field_idx };
 use super::util::{ denormalize_clamp };
 
-use ::nalgebra::{ Vec2, Pnt2 };
+use ::nalgebra::{ Vec2, Vec3, Pnt2, cast };
+use ::gen::unit::{ GenUnit2, GenUnit3 };
 
 use super::constants::*;
 
@@ -46,13 +47,12 @@ fn scale_height_noise(input: f64) -> f64 {
 /// The position starts 2 from the edge on both the x and y axis.
 /// Samples the height and variation of the biome in the given position.
 /// Returns a tuple of height start and variation.
-pub fn sample_biome_range(biomes: &[u8], size: Vec2<u32>, pos: Pnt2<u32>) -> (f64, f64) {
+pub fn sample_biome_range(biomes: &GenUnit2<u8>, size: Vec2<u32>, pos: Pnt2<u32>) -> (f64, f64) {
     let parabolic_field = parabolic_field();
     // Get the biome we are currently in. Note that we go out 2 from the edge,
     // as we need the extra data on the edge for averaging the height map
     // earlier.
-    let current_biome_idx = (pos[0] + 2) + (pos[1] + 2) * (size[0] + 4);
-    let current_biome_id = biomes[current_biome_idx as usize];
+    let current_biome_id = biomes[pos + Vec2::new(2, 2)];
 
     let mut biome_height_start_sum = 0f64;
     let mut biome_height_variation_sum = 0f64;
@@ -64,11 +64,11 @@ pub fn sample_biome_range(biomes: &[u8], size: Vec2<u32>, pos: Pnt2<u32>) -> (f6
     // get out. Vanilla uses 10/(sqrt(x^2+y^2)+0.2) as the sample graph.
     for biome_sample_z in -2i32..3 {
         for biome_sample_x in -2i32..3 {
-            // Get the id of the biome we are currently sampling.
-            let current_biome_sample_idx = ((pos[0] as i32 + biome_sample_x + 2) as u32)
-                + ((pos[1] as i32 + biome_sample_z + 2) as u32 * (size[0] + 4));
-            let current_biome_sample_id = 
-                biomes[current_biome_sample_idx as usize];
+            let biome_sample_offset: Vec2<u32> = 
+                cast(Vec2::new(biome_sample_x, biome_sample_z) + Vec2::new(2, 2));
+            let biome_pos: Pnt2<u32> = pos + biome_sample_offset;
+
+            let current_biome_sample_id = biomes[biome_pos];
 
             // Get and apply constant weights to the biome min height and variation.
             let biome_height_start = 
@@ -111,7 +111,9 @@ pub fn sample_biome_range(biomes: &[u8], size: Vec2<u32>, pos: Pnt2<u32>) -> (f6
 /// (Starts at the edge and end of the chunk, samples are on the edges of blocks,
 /// not in the center as you might expect. The edges are overlapped by 1 between
 /// chunks to make chunks smoothly blend.)
-pub fn gen_height_field(state: &WorldGeneratorState, biomes: &[u8], pos: Pnt2<i32>, size: Vec2<u32>) -> Vec<f64> {
+pub fn gen_height_field(state: &WorldGeneratorState, biomes: &GenUnit2<u8>, 
+                        pos: Pnt2<i32>, size: Vec2<u32>) -> GenUnit3<f64> {
+    // TODO: Check both dimensions
     if biomes.len() != ((size[0]+4)*(size[1]+4)) as usize { 
         println!("Biomes array not correct length, expected {:?}, got {:?}", 
                  (size[0]+4)*(size[1]+4), biomes.len());
@@ -119,7 +121,8 @@ pub fn gen_height_field(state: &WorldGeneratorState, biomes: &[u8], pos: Pnt2<i3
     };
 
     // Output buffer
-    let mut height_field = vec![0f64; (size[0]*size[1]*33) as usize];
+    let mut height_field = GenUnit3::new3(Vec3::new(size.x, 33, size.y), 0f64);
+    //let mut height_field = vec![0f64; (size[0]*size[1]*33) as usize];
 
     // Sample the noise data
     let fillin_noise_pos = [pos[0] as f64, 0.0, pos[1] as f64];

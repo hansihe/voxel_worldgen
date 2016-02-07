@@ -18,9 +18,10 @@ mod layer_simple_fn;
 pub use self::layer_simple_fn::{ GenSimpleFn, GenSimpleFnTransformer, GenSimpleFnMixer };
 
 use ::nalgebra::{ Vec2, Pnt2 };
+use ::gen::unit::GenUnit2;
 
 pub trait GenLayer<O: Sized> {
-    fn gen(&self, world_seed: i64, pos: Pnt2<i32>, size: Vec2<u32>) -> Vec<O>;
+    fn gen(&self, world_seed: i64, pos: Pnt2<i32>, size: Vec2<u32>) -> GenUnit2<O>;
 }
 
 pub type GenL<O> = Rc<GenLayer<O>>;

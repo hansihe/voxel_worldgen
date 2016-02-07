@@ -19,6 +19,8 @@ pub mod caves;
 
 pub use self::lerp::lerp_height_field;
 pub use self::height_field::gen_height_field;
+use ::nalgebra::Vec3;
+use ::gen::unit::GenUnit3;
 
 pub struct WorldGeneratorState {
     world_seed: u32,
@@ -41,17 +43,17 @@ impl WorldGeneratorState {
     }
 }
 
-pub fn generate_chunk(state: &WorldGeneratorState, chunk_pos: Pnt2<i32>) -> Vec<u8> {
+pub fn generate_chunk(state: &WorldGeneratorState, chunk_pos: Pnt2<i32>) -> GenUnit3<u8> {
     let biomes_gen = biomes::biome_map();
     let biomes = biomes_gen.gen(10, chunk_pos*4, Vec2::new(9, 9));
 
     let size: Vec2<u32> = Vec2::new(5, 5);
-    let density_field = gen_height_field(state, &biomes[..], chunk_pos * 4, size);
-    let mut block_array = lerp_height_field(&density_field, &biomes, chunk_pos.as_ref(),
-                                            &[5, 33, 5], &[4, 8, 4]);
+    let density_field = gen_height_field(state, &biomes, chunk_pos * 4, size);
+    let mut block_array = lerp_height_field(&density_field, 
+                                            Vec3::new(5, 33, 5), Vec3::new(4, 8, 4));
     
-    biome_block_mutate::mutate_chunk(state, &mut block_array, chunk_pos.as_ref());
-    caves::generate(&mut block_array, state.world_seed, 
+    biome_block_mutate::mutate_chunk(state, &mut block_array.data, chunk_pos.as_ref());
+    caves::generate(&mut block_array.data, state.world_seed, 
                     Pnt2::new(chunk_pos[0], chunk_pos[1]));
 
     block_array
@@ -61,5 +63,5 @@ use rand::{ XorShiftRng };
 pub fn test_generate_chunk(chunk_pos: &[i32; 2]) -> Vec<u8> {
     let mut rng = XorShiftRng::new_unseeded(); 
     let world_gen_state = WorldGeneratorState::new(&mut rng);
-    generate_chunk(&world_gen_state, Pnt2::new(chunk_pos[0], chunk_pos[1]))
+    generate_chunk(&world_gen_state, Pnt2::new(chunk_pos[0], chunk_pos[1])).data
 }

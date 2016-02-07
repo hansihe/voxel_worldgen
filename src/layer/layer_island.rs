@@ -1,6 +1,7 @@
 use std::rc::Rc;
 use super::{ GenLayer, LayerLCG };
 use ::nalgebra::{ Vec2, Pnt2 };
+use ::gen::unit::GenUnit2;
 
 #[derive(Clone)]
 pub struct GenIsland {
@@ -16,7 +17,7 @@ impl GenIsland {
     }
 }
 impl GenLayer<bool> for GenIsland {
-    fn gen(&self, seed: i64, pos: Pnt2<i32>, size: Vec2<u32>) -> Vec<bool> {
+    fn gen(&self, seed: i64, pos: Pnt2<i32>, size: Vec2<u32>) -> GenUnit2<bool> {
         let mut lcg = LayerLCG::new(self.seed, seed);
         let mut buf = Vec::with_capacity((size.x*size.y) as usize);
 
@@ -34,6 +35,6 @@ impl GenLayer<bool> for GenIsland {
             buf[(-pos.x + -pos.y * size.x as i32) as usize] = true;
         }
 
-        buf
+        GenUnit2::new2_from_vec(size, buf)
     }
 }
