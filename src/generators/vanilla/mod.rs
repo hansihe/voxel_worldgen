@@ -53,7 +53,7 @@ pub fn generate_chunk(state: &WorldGeneratorState, chunk_pos: Pnt2<i32>) -> GenU
                                             Vec3::new(5, 33, 5), Vec3::new(4, 8, 4));
     
     biome_block_mutate::mutate_chunk(state, &mut block_array.data, chunk_pos.as_ref());
-    caves::generate(&mut block_array.data, state.world_seed, 
+    caves::generate(&mut block_array, state.world_seed, 
                     Pnt2::new(chunk_pos[0], chunk_pos[1]));
 
     block_array

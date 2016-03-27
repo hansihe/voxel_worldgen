@@ -1,7 +1,7 @@
-extern crate image;
+//extern crate image;
 extern crate noise;
 extern crate rand;
-extern crate time;
+//extern crate time;
 extern crate num;
 extern crate nalgebra;
 

@@ -18,7 +18,7 @@ impl RngBuilder {
     pub fn init() -> RngBuilder {
         RngBuilder { state: INIT_VAL }
     }
-    pub fn mix(self, mix: u64) -> RngBuilder {
+    pub fn mix(mut self, mix: u64) -> RngBuilder {
         let mut state = self.state;
 
         state = twist(state);
@@ -26,7 +26,8 @@ impl RngBuilder {
         state = twist(state);
         state = state.wrapping_add(mix);
 
-        RngBuilder { state: state }
+        self.state = state;
+        self
     }
     fn next_u32(&mut self) -> u32 {
         let num = (self.state >> 24) as u32;

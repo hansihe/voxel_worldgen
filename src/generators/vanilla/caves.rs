@@ -3,6 +3,7 @@ use std::f32;
 use ::nalgebra::{ cast, norm };
 use ::nalgebra::{ Pnt2, Pnt3, Vec2, Vec3 };
 use ::nalgebra::{ partial_le, partial_ge };
+use ::gen::unit::GenUnit3;
 
 use ::rnd::RngBuilder;
 
@@ -23,7 +24,7 @@ fn get_chunk_idx(pos_x: i64, pos_y: i64, pos_z: i64) -> usize {
     (pos_x + (pos_z*16) + (pos_y*16*16)) as usize
 }
 
-pub fn generate(chunk_data: &mut [u8], world_seed: u32, chunk_pos: Pnt2<i32>) {
+pub fn generate(chunk_data: &mut GenUnit3<u8>, world_seed: u32, chunk_pos: Pnt2<i32>) {
     let range = RANGE_CHUNKS as i32;
 
     for current_x in (chunk_pos[0]-range)..(chunk_pos[0]+range+1) {
@@ -40,7 +41,7 @@ pub fn generate(chunk_data: &mut [u8], world_seed: u32, chunk_pos: Pnt2<i32>) {
     }
 }
 
-pub fn single_generate<R>(chunk_data: &mut [u8], rand: &mut R, current: Pnt2<i32>, 
+pub fn single_generate<R>(chunk_data: &mut GenUnit3<u8>, rand: &mut R, current: Pnt2<i32>, 
                           target: Pnt2<i32>) where R: Rng {
     let mut source_num = {
         let t1 = rand.gen_range(0, 15);
@@ -50,7 +51,6 @@ pub fn single_generate<R>(chunk_data: &mut [u8], rand: &mut R, current: Pnt2<i32
     if !rand.gen_weighted_bool(7) {
         source_num = 0;
     }
-    //println!("Current: {:?} {:?}", current, rand.next_u32());
 
     for current_source in 0..source_num {
         let pos = Pnt3::new(
@@ -83,14 +83,14 @@ pub fn single_generate<R>(chunk_data: &mut [u8], rand: &mut R, current: Pnt2<i32
     }
 }
 
-pub fn carve_dead_cave<R>(chunk_data: &mut [u8], rand: &mut R, chunk_pos: Pnt2<i32>, 
-                          cave_pos: Pnt3<f64>) where R: Rng {
+pub fn carve_dead_cave<R>(chunk_data: &mut GenUnit3<u8>, rand: &mut R, 
+                          chunk_pos: Pnt2<i32>, cave_pos: Pnt3<f64>) where R: Rng {
     let width_rand = 1.0 + rand.next_f32() * 6.0;
     carve_cave(chunk_data, rand, chunk_pos, cave_pos, &[0.0, 0.0], -1, -1, 
                width_rand, 0.5)
 }
 
-pub fn carve_cave<R>(chunk_data: &mut [u8], rand: &mut R, chunk_pos: Pnt2<i32>,
+pub fn carve_cave<R>(chunk_data: &mut GenUnit3<u8>, rand: &mut R, chunk_pos: Pnt2<i32>,
                      cave_pos_start: Pnt3<f64>, cave_angle_start: &[f32; 2],
                      mut cave_len_progress: i32, mut cave_len_total: i32,
                      horizontal_stretch: f32, vertical_stretch: f32) where R: Rng {
@@ -202,7 +202,7 @@ pub fn carve_cave<R>(chunk_data: &mut [u8], rand: &mut R, chunk_pos: Pnt2<i32>,
     }
 }
 
-fn carve_cave_step(chunk_data: &mut [u8], 
+fn carve_cave_step(chunk_data: &mut GenUnit3<u8>, 
                    chunk_pos: Pnt2<i32>, pos: Pnt3<f64>,
                    carve_box_start: Pnt3<i64>, carve_box_end: Pnt3<i64>, 
                    horizontal_scale_factor: f32, vertical_scale_factor: f32) {
@@ -263,7 +263,7 @@ fn block_is_carvable(curr: u8, above: u8) -> bool {
     above != BLOCK_WATER && above != BLOCK_FLOWING_WATER
 }
 
-fn scan_water(chunk_data: &mut [u8], carve_box_start: Pnt3<i64>, 
+fn scan_water(chunk_data: &mut GenUnit3<u8>, carve_box_start: Pnt3<i64>, 
               carve_box_end: Pnt3<i64>) -> bool {
     for curr_x in carve_box_start[0]..carve_box_end[0] {
         for curr_z in carve_box_start[2]..carve_box_end[2] {

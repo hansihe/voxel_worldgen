@@ -5,8 +5,8 @@ authors = ["HansiHE <hansihe@hansihe.com>"]
 
 [dependencies]
 noise = "*"
-image = "*"
-time = "*"
+#image = "*"
+#time = "*"
 rand = "*"
 num = "*"
 nalgebra = "*"
